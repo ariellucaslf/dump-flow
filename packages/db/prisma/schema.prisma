@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Project {
+  id              String        @id @default(uuid())
+  name            String        // Nome de identificação (ex: "App SaaS Delivery")
+  dbUrl           String        // Connection string (protegida)
+  cronSchedule    String        // Padrão Cron (ex: "0 3 * * 1")
+  destinations    Destination[] 
+  logs            BackupLog[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model Destination {
+  id              String   @id @default(uuid())
+  type            String   // Enum adaptado: "AWS_S3" | "GOOGLE_DRIVE"
+  credentials     String   // Chaves de API encriptadas na aplicação (armazenado como string criptografada)
+  targetFolder    String   // Nome do bucket AWS ou ID da pasta no GDrive
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model BackupLog {
+  id              String   @id @default(uuid())
+  status          String   // Enum adaptado: "SUCCESS" | "FAILED" | "IN_PROGRESS"
+  errorMessage    String?
+  fileSize        Int?     // Tamanho do dump gerado (em bytes)
+  executedAt      DateTime @default(now())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
