@@ -1,159 +1,131 @@
-# Turborepo starter
+<p align="center">
+  <br>
+  <h1 align="center">DumpFlow </h1>
+  <p align="center">
+    <strong>Automação Inteligente de Backups para PostgreSQL</strong>
+  </p>
+</p>
 
-This Turborepo starter is maintained by the Turborepo core team.
+O **DumpFlow** é uma solução open-source projetada para desenvolvedores e equipes que precisam automatizar o processo de dump (cópia de segurança) de seus bancos de dados PostgreSQL e enviá-los de forma segura para provedores de nuvem (AWS S3 ou Google Drive) de maneira programada e assíncrona.
 
-## Using this example
+Ao invés de criar dezenas de scripts Bash soltos em servidores diferentes, o DumpFlow oferece um Painel de Controle (Dashboard) moderno e unificado.
 
-Run the following command:
+## Tecnologias Principais
 
-```sh
-npx create-turbo@latest
+- **Frontend (Painel)**: Next.js (App Router), Tailwind CSS v4, Lucide Icons, NextAuth.
+- **Backend (Motor de Backup)**: Node.js (TypeScript), Express, `pg_dump`, `node-cron`.
+- **Banco de Dados (Metadados)**: PostgreSQL com Prisma ORM.
+- **Arquitetura**: Monorepo gerenciado com Turborepo.
+
+## Funcionalidades
+
+- **Painel Protegido**: Autenticação segura via banco de dados (Bcrypt + NextAuth).
+- **Múltiplos Projetos**: Cadastre quantos bancos PostgreSQL desejar.
+- **Agendamento Cron Avançado**: Defina de hora em hora, diariamente ou semanalmente. Suporte visual em tempo real para a tradução do Cron.
+- **Múltiplos Destinos na Nuvem**: 
+  - **AWS S3** (Via Multipart Upload).
+  - **Google Drive** (Via Service Accounts e `googleapis`).
+- **Upload via Streaming**: O backup nunca toca o disco rígido do servidor Node.js. O `pg_dump` é canalizado (Piped) diretamente para a nuvem, permitindo o backup de bancos gigantescos (Gigabytes) usando pouquíssima memória RAM.
+
+---
+
+## Pré-requisitos
+
+Antes de iniciar, certifique-se de ter instalado em sua máquina ou servidor:
+
+1. **Node.js** (v20 ou superior).
+2. **PostgreSQL Client** (`pg_dump` precisa estar instalado e disponível no PATH do sistema, pois o backend irá invocá-lo).
+3. Um banco de dados PostgreSQL livre para hospedar os metadados do DumpFlow.
+
+---
+
+## Instalação e Configuração (Setup)
+
+**1. Clone o repositório**
+```bash
+git clone https://github.com/ariellucaslf/dump-flow.git
+cd dump-flow
 ```
 
-## What's inside?
-
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+**2. Instale as dependências**
+O projeto utiliza `npm` workspaces.
+```bash
+npm install
 ```
 
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo build
-npm dlx turbo build
-npm exec turbo build
+**3. Configure as Variáveis de Ambiente**
+Na raiz do projeto (ou dentro de `apps/web`), copie o arquivo `.env.example` para `.env`:
+```bash
+cp .env.example .env
+```
+Preencha o `.env` com a URL do seu banco de dados principal (onde o Prisma salvará os dados do painel) e o `NEXTAUTH_SECRET`:
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/dumpflow_db?schema=public"
+NEXTAUTH_SECRET="gere_uma_chave_secreta_aleatoria_aqui"
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo build --filter=docs
+**4. Inicialize o Banco de Dados**
+Gere os arquivos do Prisma e crie as tabelas:
+```bash
+npm run generate -w @dump-flow/db
+npm run push -w @dump-flow/db
 ```
 
-Without global `turbo`:
-
-```sh
-npx turbo build --filter=docs
-npm exec turbo build --filter=docs
-npm exec turbo build --filter=docs
+**5. Crie seu Usuário Administrador (Seed)**
+Ainda no `.env`, defina suas credenciais pessoais para logar no painel:
+```env
+ADMIN_USERNAME="seu_usuario"
+ADMIN_PASSWORD="sua_senha_segura"
+```
+E rode o script de Seed para inserir o usuário no banco:
+```bash
+npm run seed -w @dump-flow/db
 ```
 
-### Develop
+---
 
-To develop all apps and packages, run the following command:
+## Como Executar Localmente
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+Com o banco de dados rodando e o usuário criado, você pode iniciar o Monorepo inteiro com um único comando:
 
-```sh
-cd my-turborepo
-turbo dev
+```bash
+npm run dev
 ```
 
-Without global `turbo`, use your package manager:
+Este comando (usando o Turborepo) irá subir simultaneamente:
+- O **Servidor API e Agendador de Backups** em `http://localhost:4000`
+- O **Painel Frontend (Next.js)** em `http://localhost:3000`
 
-```sh
-cd my-turborepo
-npx turbo dev
-npm exec turbo dev
-npm exec turbo dev
+Acesse `http://localhost:3000`, faça o login com as credenciais criadas no passo 5, e comece a adicionar seus Projetos!
+
+---
+
+## Guia de Credenciais de Nuvem
+
+No painel de "Novo Projeto", você precisará fornecer credenciais de destino em formato JSON.
+
+### AWS S3
+Crie um usuário IAM com permissão `s3:PutObject` para o seu Bucket. No formulário do DumpFlow, insira o seguinte JSON:
+```json
+{
+  "accessKeyId": "AKIAIOSFODNN7EXAMPLE",
+  "secretAccessKey": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+  "region": "us-east-1"
+}
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+### Google Drive
+1. Acesse o **Google Cloud Console**.
+2. Crie uma **Service Account** (Conta de Serviço) e gere uma chave em formato **JSON**.
+3. No Google Drive, crie a pasta onde quer salvar os backups e **compartilhe ela (como Editor)** com o email da Service Account criada.
+4. No formulário do DumpFlow:
+   - Em *Target/ID da Pasta*, coloque o ID da pasta (a sequência final na URL do Drive).
+   - Em *Credenciais JSON*, copie e cole **TODO o conteúdo** do arquivo JSON baixado do Google Cloud.
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+---
 
-```sh
-turbo dev --filter=web
-```
+## Contribuições
 
-Without global `turbo`:
+O DumpFlow é **Open-Source**. Sinta-se livre para fazer um Fork, reportar Issues ou abrir Pull Requests adicionando novos provedores de nuvem (como Azure Blob Storage, Cloudflare R2, Dropbox, etc).
 
-```sh
-npx turbo dev --filter=web
-npm exec turbo dev --filter=web
-npm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-npm exec turbo login
-npm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-npm exec turbo link
-npm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+Arquitetado e Desenvolvido por [Ariel Lucas](https://github.com/ariellucaslf).
