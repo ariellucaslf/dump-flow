@@ -21,7 +21,9 @@ Ao invés de criar dezenas de scripts Bash soltos em servidores diferentes, o Du
 
 - **Painel Protegido**: Autenticação segura via banco de dados (Bcrypt + NextAuth).
 - **Múltiplos Projetos**: Cadastre quantos bancos PostgreSQL desejar.
+- **Histórico de Logs**: Acompanhe o sucesso ou falha de cada backup gerado diretamente no painel.
 - **Agendamento Cron Avançado**: Defina de hora em hora, diariamente ou semanalmente. Suporte visual em tempo real para a tradução do Cron.
+- **Gatilho Manual**: Force o backup de um projeto instantaneamente via UI (Server-to-Server trigger seguro).
 - **Múltiplos Destinos na Nuvem**: 
   - **AWS S3** (Via Multipart Upload).
   - **Google Drive** (Via Service Accounts e `googleapis`).
@@ -121,6 +123,18 @@ Crie um usuário IAM com permissão `s3:PutObject` para o seu Bucket. No formul�
 4. No formulário do DumpFlow:
    - Em *Target/ID da Pasta*, coloque o ID da pasta (a sequência final na URL do Drive).
    - Em *Credenciais JSON*, copie e cole **TODO o conteúdo** do arquivo JSON baixado do Google Cloud.
+
+---
+
+## Deploy em Produção (Nuvem)
+
+O DumpFlow foi arquitetado para rodar perfeitamente em serviços modernos de PaaS (Railway, Render, Fly.io, AWS ECS). 
+
+Como o motor de backup exige que o `pg_dump` esteja nativamente instalado no sistema operacional, nós fornecemos um **Dockerfile** pronto para uso (`apps/api/Dockerfile`).
+
+**Recomendação de Infraestrutura:**
+1. **Frontend (Painel):** Hospede o `apps/web` na Vercel (Configuração padrão de Next.js).
+2. **Backend (Worker):** Hospede o `apps/api` no Railway apontando para o `Dockerfile` fornecido. Ele é construído em cima do `node:20-alpine` (super leve) e instala o `postgresql-client` automaticamente.
 
 ---
 
