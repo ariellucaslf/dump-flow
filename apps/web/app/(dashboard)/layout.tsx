@@ -1,4 +1,4 @@
-import { Database, Home, Settings } from "lucide-react";
+import { Database, Home, Settings, Activity } from "lucide-react";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../lib/auth";
@@ -30,6 +30,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <Link href="/projects" className="flex items-center gap-3 px-3 py-2.5 text-neutral-400 hover:text-white hover:bg-neutral-900 rounded-xl transition-all">
               <Database className="w-4 h-4" />
               <span className="text-sm font-medium">Projetos</span>
+            </Link>
+            <Link href="/logs" className="flex items-center gap-3 px-3 py-2.5 text-neutral-400 hover:text-white hover:bg-neutral-900 rounded-xl transition-all">
+              <Activity className="w-4 h-4" />
+              <span className="text-sm font-medium">Histórico</span>
             </Link>
             <Link href="#" className="flex items-center gap-3 px-3 py-2.5 text-neutral-600 cursor-not-allowed rounded-xl transition-all">
               <Settings className="w-4 h-4" />
