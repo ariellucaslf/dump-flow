@@ -37,3 +37,11 @@ model BackupLog {
   projectId       String
   project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String   // Criptografada com bcrypt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
