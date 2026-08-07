@@ -67,3 +67,27 @@ export async function deleteProject(projectId: string) {
     return { error: "Erro interno ao deletar o projeto." };
   }
 }
+
+export async function triggerBackupAction(projectId: string) {
+  try {
+    // A API do Node.js está rodando na porta 4000 localmente ou no domínio configurado
+    const apiUrl = process.env.API_URL || "http://localhost:4000";
+    
+    const response = await fetch(`${apiUrl}/api/projects/${projectId}/trigger`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`API retornou status ${response.status}`);
+    }
+
+    revalidatePath("/logs");
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao engatilhar backup manual:", error);
+    return { error: "Falha ao se comunicar com o motor de backup." };
+  }
+}

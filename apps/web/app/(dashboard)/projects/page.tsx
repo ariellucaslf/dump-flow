@@ -79,9 +79,15 @@ export default async function ProjectsPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button title="Executar Agora (Em Breve)" className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors">
-                          <Play className="w-4 h-4" />
-                        </button>
+                        <form action={async () => {
+                          "use server";
+                          const { triggerBackupAction } = await import("../../actions/project.actions");
+                          await triggerBackupAction(project.id);
+                        }}>
+                          <button type="submit" title="Executar Agora (Forçar Backup)" className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors">
+                            <Play className="w-4 h-4" />
+                          </button>
+                        </form>
                         <form action={async () => {
                           "use server";
                           await deleteProject(project.id);
