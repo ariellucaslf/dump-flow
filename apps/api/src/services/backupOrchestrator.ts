@@ -1,6 +1,6 @@
 import { prisma } from '@dump-flow/db';
 import { executePgDump } from './backupService';
-import { uploadToS3 } from './storageService';
+import { uploadToS3, uploadToGoogleDrive } from './storageService';
 import { PassThrough } from 'stream';
 
 export async function runBackupForProject(projectId: string) {
@@ -42,6 +42,10 @@ export async function runBackupForProject(projectId: string) {
         } catch (err) {
           console.error(`❌ Failed to parse S3 credentials for project ${project.name}`);
         }
+      } else if (destination.type === 'GOOGLE_DRIVE') {
+        uploadPromises.push(
+          uploadToGoogleDrive(passThroughStream, destination.targetFolder, fileName, destination.credentials)
+        );
       }
     }
     
