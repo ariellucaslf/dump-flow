@@ -7,6 +7,7 @@
     "generate": "prisma generate",
     "push": "prisma db push",
     "migrate": "prisma migrate dev",
+    "seed": "tsx --env-file=.env seed.ts",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
